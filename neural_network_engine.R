@@ -8,14 +8,12 @@ kLearningRate <- 0.01
 
 B <- vector('list', kLayerCount)
 W <- vector('list', kLayerCount)
-input <- c(0,0,0,0,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,0,0,0,0)
 
-
-TrainNeuralNetwork <- function() {
+TrainNeuralNetwork <- function(input = FALSE) {
+  input <- c(0,0,0,0,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,0,0,0,0)
   InitWeightsBiases()
-  output <- ForwardPropogation()
-  print(output)
-  GradientDescent()
+  output <- ForwardPropogation(input)
+  BackwardPropogation('b', output)
 }
 
 #init weights and biases for hidden layers and the output layer
@@ -27,12 +25,13 @@ InitWeightsBiases <- function() {
 }
 
 #feedforward through network from input to output
-ForwardPropogation <- function() {
-  previousLayerOutput <- input
+ForwardPropogation <- function(input) {
+  layerOutput <- vector('list', kLayerCount)
+  layerOutput[[1]] <- input
   for (i in 2:kLayerCount) {
-    previousLayerOutput <- CalculateLayerOutput(W[[i]], B[[i]], previousLayerOutput, kLayerType[i])
+    layerOutput[[i]] <- CalculateLayerOutput(W[[i]], B[[i]], layerOutput[[i - 1]], kLayerType[i])
   }
-  return(previousLayerOutput)
+  return(layerOutput)
 }
 
 CalculateLayerOutput <- function(weights, bias, inputs, layer) {
@@ -61,6 +60,14 @@ GetCorrectOutput <- function(letter) {
 }
 
 
-BackwardPropogation <- function() {
-  
+BackwardPropogation <- function(letter, output) {
+  delta <- vector('list', kLayerCount)
+  y <- GetCorrectOutput(letter)
+  error <- sum((output[[kLayerCount]] - y)^2)
+  delta[[kLayerCount]] <- error * (sum(output[[kLayerCount]]) * ( 1 - output[[kLayerCount]]))
+  for (i in kLayerCount:2) {
+    print(i)
+    delta[i - 1] <- delta[[i]] * W[[i - 1]] * (output[[i - 1]] * (1 - output[[i - 1]]))
+  }
+  print(delta)
 }
