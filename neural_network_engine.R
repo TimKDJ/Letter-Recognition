@@ -1,28 +1,31 @@
 kNeuronCount <- c(25, 25, 25, 26)
 kInputCount <- c(0, 25, 25, 25)
 kLayerType <- c('input', 'hidden', 'hidden', 'output')
-kLayerCount <- 4
-kBiasBound <- 0.1
-kWeightBound <- 0.1
-kIterations <- 500
-kLearningRate <- 1
+kLayerTotal <- 4
+kBiasBound <- 0.5
+kWeightBound <- 0.5
+kIterations <- 800
+kLearningRate <- 0.1
 
-B <- vector('list', kLayerCount)
-W <- vector('list', kLayerCount)
+B <- vector('list', kLayerTotal)
+W <- vector('list', kLayerTotal)
 
 TrainNeuralNetwork <- function(input = FALSE, log = FALSE) {
   input <- c(0,0,0,0,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,0,0,0,0)
-  output <- GetCorrectOutput('b')
-  InitWeightsBiases()
+  input <- c(1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0)
+  input <- c(0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1)
+  input <- c(1,1,1,1,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0)
+  target <- GetCorrectOutput('b')
+  weights <- InitWeightsBiases()
   for (i in 1:kIterations) {
     layerValues <- ForwardPropogation(input)
-    BackwardPropogation(output, layerValues, i, log)
+    BackwardPropogation(target, layerValues, i, log)
   }
 }
 
 #init weights and biases for hidden layers and the output layer
 InitWeightsBiases <- function() {
-  for (i in 2:kLayerCount) {
+  for (i in 2:kLayerTotal) {
     B[[i]] <<- runif(kNeuronCount[i], -kBiasBound, kBiasBound)
     W[[i]] <<- matrix(runif(kInputCount[i] * kNeuronCount[i], -kWeightBound, kWeightBound), kInputCount[i], kNeuronCount[i])
   }
@@ -30,17 +33,17 @@ InitWeightsBiases <- function() {
 
 #feedforward through network from input to output
 ForwardPropogation <- function(input) {
-  layers <- matrix(list(), nrow=kLayerCount, ncol=2)
+  layers <- matrix(list(), nrow=kLayerTotal, ncol=2)
   colnames(layers) <- c('input', 'output')
   layers[[1, 'output']] <- input
-  for (i in 2:kLayerCount) {
+  for (i in 2:kLayerTotal) {
     layers[[i, 'input']] <- CalculateLayerInput(W[[i]], B[[i]], layers[[i - 1, 'output']])
     layers[[i, 'output']] <- CalculateLayerOutput(layers[[i, 'input']], kLayerType[i])
   }
   return(layers)
 }
 
-CalculateLayerInput <- function(weights, bias, inputs, layer) {
+CalculateLayerInput <- function(weights, bias, inputs) {
   totalInput <- colSums(inputs * weights) + bias
   return(totalInput)
 }
@@ -75,17 +78,19 @@ GetCorrectOutput <- function(letter) {
   return(output)
 }
 
-
-BackwardPropogation <- function(expectedOutput, layers, iteration, log = FALSE) {
-  delta <- vector('list', kLayerCount)
-  error <- sum((layers[[kLayerCount, 'output']] - expectedOutput)^2)
+BackwardPropogation <- function(target, layers, iteration, log = FALSE) {
+  delta <- vector('list', kLayerTotal)
+  totalError <- sum(1/2 * (target - layers[[kLayerTotal, 'output']])^2)
+  derivError <- layers[[kLayerTotal, 'output']] - target
   if (log == TRUE) {
-    cat('Iteration:', iteration, '| error:', error, '\n')
+    cat('Iteration:', iteration, '| error:', totalError, '\n')
   }
-  delta[[kLayerCount]] <- error * SoftmaxFunction(layers[[kLayerCount, 'input']], deriv = TRUE)
-  #  for (i in (kLayerCount - 1):2) {
-  #    delta[i] <- delta[[i + 1]] * SigmoidFunction(output[[i]], deriv = TRUE)
-  #  }
-  W[[kLayerCount]] <<- W[[kLayerCount]] - kLearningRate * delta[[kLayerCount]] * layers[[kLayerCount, 'input']]
-  B[[kLayerCount]] <<- B[[kLayerCount]] - kLearningRate * delta[[kLayerCount]]
+  delta[[kLayerTotal]] <- derivError * SoftmaxFunction(layers[[kLayerTotal, 'input']], deriv = TRUE)
+  for (i in (kLayerTotal - 1):2) {
+    delta[[i]] <- rowSums(t(delta[[i + 1]] * t(W[[i + 1]]))) * SigmoidFunction(layers[[i, 'input']], deriv = TRUE)
+  }
+  for (i in 2:4) {
+    W[[i]] <<- W[[i]] - kLearningRate * t(t(layers[[i - 1, 'output']])) %*% t(delta[[i]])
+    B[[i]] <<- B[[i]] - kLearningRate * delta[[i]]
+  }
 }
