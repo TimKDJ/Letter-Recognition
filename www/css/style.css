@@ -1,0 +1,10 @@
+table tr .cell {
+  width: 25px;
+  height: 25px;
+  cursor: crosshair
+}
+/*body, a:hover {cursor: url(http://ani.cursors-4u.net/others/oth-9/oth839.cur), progress !important;}*/
+
+table {
+  border: 1px solid black
+}
