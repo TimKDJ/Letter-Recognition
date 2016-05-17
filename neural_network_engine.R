@@ -22,20 +22,17 @@ NeuralNetwork <- function(input, mode, initWeights = FALSE, saveWeights = FALSE,
   #  return(prediction)
   } else if (mode == 'train') {
     if (initWeights == TRUE) {
-      print('init weights')
       InitWeightsBiases()
     }
     error <- 0
     for (i in 1:kIterations) {
-      meanError <- 0
       for (j in 1:length(input[, 1])) {
         sample <- input[[j, 2]]
         layerValues <- ForwardPropogation(sample)
         target <- GetCorrectOutput(input[[j, 1]])
         BackwardPropogation(target, layerValues)
-        meanError <- (meanError + CalculateError(target, layerValues)) / j
+        error <- error + CalculateError(target, layerValues, nrow(input[, 2]))
       }
-      error <- ((i - 1) * error + meanError) / i
       if (log == TRUE) {
         cat('Iteration:', i, '| error:', error, '\n')
       }
@@ -106,9 +103,9 @@ GetCorrectOutput <- function(letter) {
   return(output)
 }
 
-CalculateError <- function(target, layers, deriv = FALSE) {
+CalculateError <- function(target, layers, deriv = FALSE, sampleAmount = FALSE) {
   if (deriv == FALSE) {
-    error <- sum(1/2 * (target - layers[[kLayerTotal, 'output']])^2)
+    error <- sum(1 / sampleAmount * (target - layers[[kLayerTotal, 'output']])^2)
   } else {
     error <- layers[[kLayerTotal, 'output']] - target
   }
