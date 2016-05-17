@@ -1,15 +1,16 @@
 library(shiny)
 shinyUI(pageWithSidebar(
-  headerPanel("Letter Recognition"),
+  headerPanel(
+    'Letter Recognition',
+    tags$head(tags$link(rel='stylesheet', type='text/css', href='css/style.css'))
+    ),
   sidebarPanel(
-    tags$head(
-      tags$link(rel="stylesheet", type="text/css", href="css/style.css"),
-      tags$script(type = 'text/javascript', src = 'js/drawingPad.js')
-    ), 
-    actionButton("pencil", label="Next")
+    uiOutput('pad')
   ),
   mainPanel(
-    uiOutput('pad'),
-    textOutput("view")
+    actionButton('continue', 'Continue'),
+    actionButton('reset', 'Clear'),
+    textOutput('view'),
+    includeScript('www/js/drawingPad.js')
   )
 ))
