@@ -1,10 +1,10 @@
 source('neural_network_engine.R')
 
-GenerateTable <- function(rows, cols) {
+GenerateTable <- function() {
   table <- '<table>'
-  for (i in 1:rows) { 
+  for (i in 1:kPadRows) { 
     table <- paste0(table, '<tr>')
-    for (i in 1:cols) { 
+    for (i in 1:kPadCols) { 
       table <- paste0(table, '<td class="unselected"></td>')
     } 
     table <- paste0(table, '</tr>')
@@ -14,30 +14,18 @@ GenerateTable <- function(rows, cols) {
 }
 
 ParseJSString <- function(x) {
-  result <- numeric(kNeuronCount[1])
+  result <- numeric(kPadRows * kPadCols)
   inputs <- numeric(0)
   for (i in 1:length(x)) {
-    row <- as.numeric(substring(x[i],1,1)) + 1
-    col <- as.numeric(substring(x[i],3,3)) * kPadRows
-    inputs <- append(inputs, row + col)
+    row <- as.numeric(unlist(strsplit(x[i], '[+]'))[1]) + 1
+    col <- as.numeric(unlist(strsplit(x[i], '[+]'))[2]) * kPadRows
+    inputs <- c(inputs, row + col)
   }
   result[inputs] <- 1
   return(result)
 }
 
-ParseCSVSamples <- function() {
-  data <- read.delim('samples.csv', header=FALSE, sep=' ')
-  samples <- matrix(list(), nrow(data), 2)
-  for (i in 1:nrow(samples)) {
-    letter <- as.character(data[i, 1])
-    samples[[i, 1]] <- letter
-    input <- unlist(data[i, 2:101])
-    samples[[i, 2]] <- input
-  }
-  return(samples)
+SaveSample <- function(letter, input) {
+  sample <- matrix(c(letter, input), 1, length(input) + 1)
+  write.table(sample, 'samples.csv', row.names=FALSE, col.names=FALSE, append=TRUE)
 }
-
-#input <- ParseCSVSamples()
-#NeuralNetwork(input[[48, 2]])
-#NeuralNetwork(input, TRUE, TRUE, TRUE)
-

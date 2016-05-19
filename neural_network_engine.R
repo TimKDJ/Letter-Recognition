@@ -6,40 +6,48 @@ kLayerType <- c('input', 'hidden', 'output')
 kLayerTotal <- 3
 kBiasBound <- 0.5
 kWeightBound <- 0.1
-kIterations <- 500
-kLearningRate <- 0.1
+kMaxEpochs <- 2000
+kLearningRate <- 0.15
 
 B <- vector('list', kLayerTotal)
 W <- vector('list', kLayerTotal)
 
-NeuralNetwork <- function(input, mode, initWeights = FALSE, saveWeights = FALSE, log = FALSE) {
+NeuralNetwork <- function(input, mode, loadWeights = FALSE, saveWeights = FALSE, log = TRUE) {
+  InitWeightsBiases(loadWeights)
   if (mode == 'run') {
-    load('weights.RData', .GlobalEnv)
-    load('bias.RData', .GlobalEnv)
     layerValues <- ForwardPropogation(input)
     return(layerValues[[kLayerTotal, 'output']])
-   # prediction <- PredictionFromOutput(layerValues)
-  #  return(prediction)
   } else if (mode == 'train') {
-    if (initWeights == TRUE) {
-      InitWeightsBiases()
-    }
-    error <- 0
-    for (i in 1:kIterations) {
-      for (j in 1:length(input[, 1])) {
-        sample <- input[[j, 2]]
+    c <- 1
+    prevValidation <- Inf
+    currValidation <- 10^10
+    while (c <= kMaxEpochs && currValidation < prevValidation) {
+      prevValidation <- currValidation
+      trainingError <- 0
+      validationError <- 0
+      for (j in 1:nrow(input[['training']])) {
+        sample <- input[['training']][[j, 2]]
         layerValues <- ForwardPropogation(sample)
-        target <- GetCorrectOutput(input[[j, 1]])
+        target <- GetCorrectOutput(input[['training']][[j, 1]])
         BackwardPropogation(target, layerValues)
-        error <- error + CalculateError(target, layerValues, nrow(input[, 2]))
+        trainingError <- trainingError + CalculateError(target, layerValues, n=nrow(input[['training']]))
+      }
+      for (j in 1:nrow(input[['validation']])) {
+        sample <- input[['validation']][[j, 2]]
+        layerValues <- ForwardPropogation(sample)
+        target <- GetCorrectOutput(input[['validation']][[j, 1]])
+        validationError <- validationError + CalculateError(target, layerValues, n=nrow(input[['validation']]))
       }
       if (log == TRUE) {
-        cat('Iteration:', i, '| error:', error, '\n')
+        cat('Epoch:', c, '| training error:', trainingError, '\n')
+        cat('Epoch:', c, '| validation error:', validationError, '\n')
       }
-      if (saveWeights == TRUE) {
-        save(W, file = 'weights.RData')
-        save(B, file = 'bias.RData')
-      }
+      currValidation <- validationError
+      c <- c + 1
+    }
+    if (saveWeights == TRUE) {
+      save(W, file = 'weights.RData')
+      save(B, file = 'bias.RData')
     }
   }
 }
@@ -70,10 +78,15 @@ BackwardPropogation <- function(target, layers) {
 }
 
 #init weights and biases for hidden layers and the output layer
-InitWeightsBiases <- function() {
-  for (i in 2:kLayerTotal) {
-    B[[i]] <<- runif(kNeuronCount[i], -kBiasBound, kBiasBound)
-    W[[i]] <<- matrix(runif(kInputCount[i] * kNeuronCount[i], -kWeightBound, kWeightBound), kInputCount[i], kNeuronCount[i])
+InitWeightsBiases <- function(load) {
+  if (load == FALSE) {
+    for (i in 2:kLayerTotal) {
+      B[[i]] <<- runif(kNeuronCount[i], -kBiasBound, kBiasBound)
+      W[[i]] <<- matrix(runif(kInputCount[i] * kNeuronCount[i], -kWeightBound, kWeightBound), kInputCount[i], kNeuronCount[i])
+    }
+  } else {
+    load('weights.RData', .GlobalEnv)
+    load('bias.RData', .GlobalEnv)
   }
 }
 
@@ -103,9 +116,9 @@ GetCorrectOutput <- function(letter) {
   return(output)
 }
 
-CalculateError <- function(target, layers, deriv = FALSE, sampleAmount = FALSE) {
+CalculateError <- function(target, layers, deriv = FALSE, n = FALSE) {
   if (deriv == FALSE) {
-    error <- sum(1 / sampleAmount * (target - layers[[kLayerTotal, 'output']])^2)
+    error <- sum(1 / n * (target - layers[[kLayerTotal, 'output']])^2)
   } else {
     error <- layers[[kLayerTotal, 'output']] - target
   }
