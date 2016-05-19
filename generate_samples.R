@@ -1,3 +1,5 @@
+source('neural_network_engine.R')
+
 ParseCSVSamples <- function() {
   data <- read.delim('samples.csv', header=FALSE, sep=' ')
   samples <- matrix(list(), nrow(data), 2)
@@ -13,9 +15,12 @@ AddNoise <- function(x) {
   result[[1]] <- x
   c <- 2
   for (i in 1:length(x)) {
-    result[[c]] <- x
-    result[[c]][i] = ifelse(x[i] == 0, 1, 0)
-    c <- c + 1
+    prob <- runif(1)
+    if (prob > 0.5) { #every pixel has a .5 probability of changing and thereby giving a new vector
+      result[[c]] <- x
+      result[[c]][i] = ifelse(x[i] == 0, 1, 0)
+      c <- c + 1
+    }
   }
   return(result)
 }
@@ -55,14 +60,14 @@ GetFreeMovements <- function(mat) {
 }
 
 shiftSampleInSpace <- function(x) {
-  mat <- matrix(x, kPadRows, kPadCols)
-  moves <- GetFreeMovements(mat)
+  m <- matrix(x, kPadRows, kPadCols)
+  moves <- GetFreeMovements(m)
   shiftedVec <- list()
   shiftedVec[[1]] <- x
   c <- 2
   for (i in 1:ncol(moves)) {
     if (moves[, i] > 0) {
-      tmp <- mat
+      tmp <- m
       direction <- colnames(moves)[i]
       for (j in 1:moves[, i]) {
         if (direction == 'up') {
@@ -86,8 +91,8 @@ shiftSampleInSpace <- function(x) {
   return(shiftedVec)
 }
 
-GenerateNoisySamples <- function(input) {
-  samples <- numeric(0)
+GenerateMultipleSamples <- function(input) {
+  samples <- list()
   for (i in 1:nrow(input)) {
     letter <- input[[i, 1]]
     s <- input[[i, 2]]
@@ -96,27 +101,50 @@ GenerateNoisySamples <- function(input) {
     for (j in 1:length(sv)) {
       nsv <- c(nsv, AddNoise(sv[[j]]))
     }
-    nsvSamples <- matrix(list(), length(nsv), 2)
-    nsvSamples[, 1] <- letter
-    nsvSamples[, 2] <- nsv
-    samples <- rbind2(samples, nsvSamples)
+    samples[[letter]] <- sample(c(samples[[letter]], nsv))
     cat('letter:', letter, '| Amount of samples:', length(nsv), '\n')
   }
   return(samples)
   
 }
 
-
-
-#p <- list(sample(0:1, 100, TRUE))
-#f <- input[[1, ]]
-#x[seq(10, 100, 10)] <- 0
-#x[1:10] <- 0
-#x[81:100] <- 0
-#matrix(input[[1,2]], kPadRows, kPadCols)
-#z <- GenerateNoisySamples(input)
-
-singularSamples <- ParseCSVSamples()
-multipleSamples <- GenerateNoisySamples(singularSamples)
+CreateSets <- function() {
+  writtenSamples <- ParseCSVSamples()
+  newSamples <- GenerateMultipleSamples(writtenSamples)
+  v <- numeric(0)
+  for (i in 1:length(newSamples)) {
+    v <- c(v, length(newSamples[[i]]))
+  }
+  trainSeq <- 1:floor(.7 * min(v))
+  validateSeq <- (max(trainSeq) + 1):(max(trainSeq) + floor(.2 * min(v)))
+  testSeq <- (max(validateSeq) + 1):(max(validateSeq) + floor(.1 * min(v)))
+  sets <- list()
+  for (i in 1:length(newSamples)) {
+    #generate empty lists to be filled
+    trainingSet <- matrix(list(), length(trainSeq), 2)
+    validationSet <- matrix(list(), length(validateSeq), 2)
+    testSet <- matrix(list(), length(testSeq), 2)
+    
+    letter <- names(newSamples)[i]
+    #create trainingset one letter at a time
+    samples <- newSamples[[i]][trainSeq]
+    trainingSet[, 1] <- letter
+    trainingSet[, 2] <- samples
+    #validationset
+    samples <- newSamples[[i]][validateSeq]
+    validationSet[, 1] <- letter
+    validationSet[, 2] <- samples
+    #testset
+    samples <- newSamples[[i]][testSeq]
+    testSet[, 1] <- letter
+    testSet[, 2] <- samples
+    
+    sets[['training']] <- rbind2(sets[['training']], trainingSet)
+    sets[['validation']] <- rbind2(sets[['validation']], validationSet)
+    sets[['test']] <- rbind2(sets[['test']], testSet)
+  }
+  return(sets)
+}
+sets <- CreateSets()
 #NeuralNetwork(input[[3, 2]], 'run', FALSE) #run
-NeuralNetwork(multipleSamples, 'train', FALSE, TRUE) #train with samples csv
+NeuralNetwork(sets, 'train', FALSE, FALSE) #train with samples csv
