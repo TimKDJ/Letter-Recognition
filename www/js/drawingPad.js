@@ -2,10 +2,6 @@ $(document).ready(function () {
     var coordinates = [];
     var mouseDown = false;
     var allowDraw = true;
-
-    window.ondragstart = function() { 
-        return false; 
-    };
     
     $('#pad').delegate('td', 'mousedown', function() {
         if (allowDraw) {
@@ -19,12 +15,43 @@ $(document).ready(function () {
             setCoordinates($(this));
 	}
     });
+    
     $('html').bind('mouseup', function() {
 	mouseDown = false;
+    });
+    
+    $('#continue').on('click', function() {
+        if (coordinates.length > 0 && allowDraw == true) {
+            allowDraw = false;
+            Shiny.onInputChange('coordinates', coordinates);
+            $('#prediction').show('slow');
+        }
+    });
+    
+    $('#reset').on('click', function() {
+        if (coordinates.length > 0) {
+            allowDraw = true;
+            unmarkCells();
+            coordinates = [];
+            $('#prediction').hide('slow');
+        }
+    });
+    
+    $('.action-button').mouseup(function(){
+        $(this).blur();
     });
 
     markCell = function(el) {
         el.attr('class', 'selected');
+    };
+    
+    unmarkCells = function() {
+        $('td').each(function() {
+            var cellClass = $(this).attr('class');
+            if (cellClass == 'selected') {
+                $(this).attr('class', 'unselected');
+            }
+        });
     };
     
     setCoordinates = function(el) {
@@ -34,23 +61,9 @@ $(document).ready(function () {
             coordinates.push(row + '+' + col);
         }
     };
-
-    $('#continue').on('click', function() {
-        if (coordinates.length > 0) {
-            Shiny.onInputChange('coordinates', coordinates);
-            allowDraw = false;
-        }
-    });
     
-    $('#reset').on('click', function() {
-        allowDraw = true;
-        coordinates = [];
-        $('td').each(function() {
-            var cellClass = $(this).attr('class');
-            if (cellClass == 'selected') {
-                $(this).attr('class', 'unselected');
-            }
-        });
-    });
+    window.ondragstart = function() { 
+        return false; 
+    };
 
 });
