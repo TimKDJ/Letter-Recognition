@@ -1,32 +1,35 @@
-library(shiny)
-shinyUI(fluidPage(
-  headerPanel(
-    tags$head(tags$link(rel='stylesheet', type='text/css', href='css/style.css'))
+shinyUI(fixedPage(
+  title='Letter Recognition',
+  tags$head(tags$link(rel='stylesheet', type='text/css', href='css/style.css')),
+  tags$head(tags$link(rel='icon', href='img/favicon.ico')),
+  fixedRow(
+    column(12,
+           img(src='img/draw_rs.jpg', class='header'),
+           img(src='img/nn_rs.jpg', class='header'),
+           img(src='img/letters_rs.jpg', class='header')
+    )
   ),
-  fluidRow(
-    column(2),
-    column(2, align='center',
-           img(src='img/draw.jpg'),
-           img(src='img/nn.jpg'),
-           img(src='img/letters.jpg')
+  fixedRow(
+    column(12, 
+           img(src='img/arrows.png', id='arrow_left'),
+           img(src='img/arrows.png', id='arrow_right'),
+           h2('Neural Network for Capital Letter Recognition')
+    )
+  ),
+  fixedRow(
+    column(1),
+    column(6, align='center',
+           uiOutput('pad')
     ),
-    column(4, align='center',
-           titlePanel(
-             'Neural Network for Letter Recognition'
-           ),
-           fluidRow(
-             column(9,
-                    uiOutput('pad')
-             ),
-             column(3,
-                    textInput('letter', 'Letter'),
-                    actionButton('continue', 'Continue'),
-                    actionButton('reset', 'Clear'),
-                    conditionalPanel('input.reset == 0', verbatimTextOutput('view')),
-                    includeScript('www/js/drawingPad.js')
-             )
-           )
+    column(4,
+           textInput('letter', 'Letter'),
+           verbatimTextOutput('letter'),
+           actionButton('continue', 'Continue'),
+           br(),
+           actionButton('reset', 'Clear'),
+           uiOutput('prediction')
     ),
-    column(4)
-  )
+    column(1)
+  ),
+  includeScript('www/js/drawingPad.js')
 ))

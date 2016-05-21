@@ -16,7 +16,7 @@ AddNoise <- function(x) {
   c <- 2
   for (i in 1:length(x)) {
     prob <- runif(1)
-    if (prob > 0.5) { #every pixel has a .5 probability of changing and thereby giving a new vector
+    if (prob > .5) { #every pixel has a .8 probability of changing and thereby giving a new vector
       result[[c]] <- x
       result[[c]][i] = ifelse(x[i] == 0, 1, 0)
       c <- c + 1
@@ -115,6 +115,7 @@ CreateSets <- function() {
   for (i in 1:length(newSamples)) {
     v <- c(v, length(newSamples[[i]]))
   }
+  cat('Amount of samples per letter:', min(v))
   trainSeq <- 1:floor(.7 * min(v))
   validateSeq <- (max(trainSeq) + 1):(max(trainSeq) + floor(.2 * min(v)))
   testSeq <- (max(validateSeq) + 1):(max(validateSeq) + floor(.1 * min(v)))
@@ -143,8 +144,9 @@ CreateSets <- function() {
     sets[['validation']] <- rbind2(sets[['validation']], validationSet)
     sets[['test']] <- rbind2(sets[['test']], testSet)
   }
+  sets[['training']] <- sets[['training']][sample(nrow(sets[['training']])),]
   return(sets)
 }
 sets <- CreateSets()
 #NeuralNetwork(input[[3, 2]], 'run', FALSE) #run
-NeuralNetwork(sets, 'train', FALSE, FALSE) #train with samples csv
+result <- NeuralNetwork(sets, 'train', FALSE, TRUE) #train with samples csv

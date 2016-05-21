@@ -1,19 +1,91 @@
-table {
-    background: #f5f5f5;
-    border: 1px solid black;
-    cursor: crosshair
+body {
+    background: #F6F6F6;
+}
+.container {
+    width: 850px;
+    height: auto;
+    position: relative;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.4);
+    border-style: solid;
+    border-color: #939393;
+    border-width: 1px;
+    margin: 0 auto 75px;
+    padding: 0px 0px 50px 0px;
+    background-color: #FFFFFF;
+}
+img.header {
+    width: 33.33%;
+    float: left;
 }
 
-.well {
-    background: #FFFFFF
+img#arrow_left {
+    float: left;
+    width: 5%;
+    margin-top: -15px;
+    margin-left: 30px;
 }
+
+img#arrow_right {
+    float: right;
+    width: 5%;
+    margin-top: -15px;
+    margin-right: 30px;
+}
+
+h2 {
+    color: #0072C6;
+    height: 125px;
+    line-height: 100px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+h5 {
+    color: #0072C6;
+    font-weight: bold;
+}
+
+#prediction {
+    text-align: center;
+    padding: 5px;
+    display: none;
+    border: 1px solid #0072C6;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+}
+
+#output {
+    font-family: 'Times New Roman', Georgia, Serif;
+    font-weight: bold;
+    font-size: 350%;
+}
+
+#certainty {
+    font-style: italic;
+    color: #4a4b44;
+}
+
+table {
+    cursor: crosshair;
+    background: #f5f5f5;
+    border: 1px solid #4a4b44;
+}
+
 table tr td {
-    width: 25px;
-    height: 25px
+    width: 35px;
+    height: 35px
 }
 
 td.selected {
-    background: #0072C6
+    background: #0072C6;
+}
+
+#continue {
+    margin-top: 50px;
+}
+#reset {
+    margin-top: 20px;
+    margin-bottom: 50px;
 }
 
 .action-button {
@@ -54,21 +126,4 @@ td.selected {
 .action-button:active {
     position:relative;
     top:1px;
-}
-
-#continue {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-#reset {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-h2 {
-    color: #0072C6;
-    height: 100px;
-    line-height: 100px;
-    vertical-align: middle;
 }

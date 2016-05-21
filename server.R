@@ -1,44 +1,36 @@
-library(shiny)
 source('neural_network_engine.R')
 source('server_helper_functions.R')
+library(shiny)
 
 shinyServer(function(input, output, session) {
-  values <- reactiveValues()
-  values$show <- 'no'
-  
-  prediction <- reactive({
-    return(values$show)
+  coordinates <- reactive({
+    input$coordinates
   })
-  
-  observeEvent(input$continue, {
-    print('cont')
-    values$show <- 'yes'
+  letter <- reactive({
+    input$letter
   })
-  observeEvent(input$reset, {
-    print('reset')
-    values$show <- 'no'
+  output$pad <- renderUI({
+    HTML(GenerateTable())
   })
-  
-  coordinates <- reactive({input$coordinates})
-  letter <- reactive({input$letter})
   observeEvent(coordinates(), {
     if (!is.null(coordinates())) {
       input <- ParseJSString(coordinates())
       #SaveSample(letter(), input)
-      #isolate({input$coordinates <- NeuralNetwork(input, 'run', TRUE)})
-      #print(NeuralNetwork(input, 'run', TRUE))
     }
   })
-  output$pad <- renderUI(HTML(GenerateTable()))
-  output$view <- renderText({ 
+  output$prediction <- renderUI({ 
     if (!is.null(coordinates())) {
       input <- ParseJSString(coordinates())
       nn <- NeuralNetwork(input, 'run', TRUE)
-      pred <- LETTERS[which.max(nn)]
-      paste('Prediction:',pred, '(certainty is ', round(max(nn) * 100, 2), '%)')
+      HTML(paste0(
+        '<h5>Prediction:</h5>
+          <span id ="output">', nn[1], '</span><br>
+          <span id="certainty">Certainty: ', nn[2], '%</span>'
+      ))
     }
   })
-  #paste('saving letter:',letter(), coordinates()) })
+  outputOptions(output, 'prediction', suspendWhenHidden=FALSE)
+  output$letter <- renderText({
+    letter()
+  })
 })
-
-#roxygen2 for auto documentation

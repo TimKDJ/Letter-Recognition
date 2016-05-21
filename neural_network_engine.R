@@ -1,12 +1,12 @@
 kPadCols <- 10
 kPadRows <- 10
-kNeuronCount <- c(100, 63, 26)
-kInputCount <- c(0, 100, 63)
+kNeuronCount <- c(100, 50, 26)
+kInputCount <- c(0, 100, 50)
 kLayerType <- c('input', 'hidden', 'output')
 kLayerTotal <- 3
-kBiasBound <- 0.5
-kWeightBound <- 0.1
-kMaxEpochs <- 2000
+kBiasBound <- 0.1
+kWeightBound <- 0.01
+kMaxEpochs <- 150
 kLearningRate <- 0.15
 
 B <- vector('list', kLayerTotal)
@@ -14,41 +14,58 @@ W <- vector('list', kLayerTotal)
 
 NeuralNetwork <- function(input, mode, loadWeights = FALSE, saveWeights = FALSE, log = TRUE) {
   InitWeightsBiases(loadWeights)
+  
   if (mode == 'run') {
-    layerValues <- ForwardPropogation(input)
-    return(layerValues[[kLayerTotal, 'output']])
+    layers <- ForwardPropogation(input)
+    output <- GetPrediction(layers)
+    return(output)
+    
   } else if (mode == 'train') {
+    error <- list()
     c <- 1
-    prevValidation <- Inf
-    currValidation <- 10^10
-    while (c <= kMaxEpochs && currValidation < prevValidation) {
-      prevValidation <- currValidation
-      trainingError <- 0
-      validationError <- 0
+    while (c <= kMaxEpochs) {
+      
+      error[['training']][c] <- 0
       for (j in 1:nrow(input[['training']])) {
-        sample <- input[['training']][[j, 2]]
-        layerValues <- ForwardPropogation(sample)
+        layers <- ForwardPropogation(input[['training']][[j, 2]])
         target <- GetCorrectOutput(input[['training']][[j, 1]])
-        BackwardPropogation(target, layerValues)
-        trainingError <- trainingError + CalculateError(target, layerValues, n=nrow(input[['training']]))
+        BackwardPropogation(target, layers)
+        error[['training']][c] <- error[['training']][c] + CalculateError(target, layers, n=nrow(input[['training']]))
       }
+      
+      error[['validation']][c] <- 0
       for (j in 1:nrow(input[['validation']])) {
-        sample <- input[['validation']][[j, 2]]
-        layerValues <- ForwardPropogation(sample)
+        layers <- ForwardPropogation(input[['validation']][[j, 2]])
         target <- GetCorrectOutput(input[['validation']][[j, 1]])
-        validationError <- validationError + CalculateError(target, layerValues, n=nrow(input[['validation']]))
+        error[['validation']][c] <- error[['validation']][c] + CalculateError(target, layers, n=nrow(input[['validation']]))
       }
+      
+      correct <- 0
+      for (j in 1:nrow(input[['test']])) {
+        layers <- ForwardPropogation(input[['test']][[j, 2]])
+        output <- GetPrediction(layers)
+        if (output[1] == toupper(input[['test']][[j, 1]])) {
+          correct <- correct + 1
+        }
+      }
+      error[['test']][c] <- round(correct / nrow(input[['test']]) * 100, 2)
+      
       if (log == TRUE) {
-        cat('Epoch:', c, '| training error:', trainingError, '\n')
-        cat('Epoch:', c, '| validation error:', validationError, '\n')
+        cat('Epoch:', c, '\n')
+        cat('training error:', error[['training']][c], '\n')
+        cat('validation error:', error[['validation']][c], '\n')
+        cat('Test accuracy: ', error[['test']][c], '%\n\n', sep='')
       }
-      currValidation <- validationError
+      
       c <- c + 1
     }
+    
     if (saveWeights == TRUE) {
       save(W, file = 'weights.RData')
       save(B, file = 'bias.RData')
     }
+    
+    return(error)
   }
 }
 
@@ -77,9 +94,16 @@ BackwardPropogation <- function(target, layers) {
   UpdateWeightsBiases(delta, layers)
 }
 
+GetPrediction <- function(layers) {
+  output <- layers[[kLayerTotal, 'output']]
+  prediction <- LETTERS[which.max(output)]
+  certainty <- round(max(output) * 100, 3)
+  return(c(prediction, certainty))
+}
+
 #init weights and biases for hidden layers and the output layer
-InitWeightsBiases <- function(load) {
-  if (load == FALSE) {
+InitWeightsBiases <- function(loadOld) {
+  if (loadOld == FALSE) {
     for (i in 2:kLayerTotal) {
       B[[i]] <<- runif(kNeuronCount[i], -kBiasBound, kBiasBound)
       W[[i]] <<- matrix(runif(kInputCount[i] * kNeuronCount[i], -kWeightBound, kWeightBound), kInputCount[i], kNeuronCount[i])
@@ -118,7 +142,7 @@ GetCorrectOutput <- function(letter) {
 
 CalculateError <- function(target, layers, deriv = FALSE, n = FALSE) {
   if (deriv == FALSE) {
-    error <- sum(1 / n * (target - layers[[kLayerTotal, 'output']])^2)
+    error <- 1 / n * sum((target - layers[[kLayerTotal, 'output']])^2)
   } else {
     error <- layers[[kLayerTotal, 'output']] - target
   }
@@ -134,7 +158,8 @@ SigmoidFunction <- function(x, deriv = FALSE) {
 }
 
 SoftmaxFunction <- function(x, deriv = FALSE) {
-  result <- exp(x) / sum(exp(x))
+  max <- max(x) #normalize output to prevent exponent from going to Inf
+  result <- exp(x - max) / sum(exp(x - max))
   if (deriv == TRUE) {
     result <- result * (1 - result)
   }
