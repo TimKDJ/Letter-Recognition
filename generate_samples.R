@@ -1,24 +1,33 @@
 source('neural_network_engine.R')
 
 ParseCSVSamples <- function() {
+  if (!file.exists('samples.csv')) {
+    stop('Cannot find samples.csv in ', getwd())
+  }
   data <- read.delim('samples.csv', header=FALSE, sep=' ')
+  if (ncol(data) != 1 + kPadRows * kPadCols) {
+    stop('Number of columns in file (', ncol(data), ') do not correspond to needed amount (', 1 + kPadRows * kPadCols, ')')
+  }
   samples <- matrix(list(), nrow(data), 2)
   for (i in 1:nrow(data)) {
+    if (!data[i, 1] %in% letters || sum(!data[1, 2:ncol(data)] %in% 0:1) > 0) {
+      stop('Invalid vector on line number ', i)
+    }
     samples[[i, 1]] <- as.character(data[i, 1])
-    samples[[i, 2]] <- unlist(data[i, 2:ncol(data)])
+    samples[[i, 2]] <- as.numeric(data[i, 2:ncol(data)])
   }
   return(samples)
 }
 
 AddNoise <- function(x) {
   result <- list()
-  result[[1]] <- x
+  result[[1]] <- x #add original vector in first slot
   c <- 2
   for (i in 1:length(x)) {
     prob <- runif(1)
-    if (prob > .5) { #every pixel has a .8 probability of changing and thereby giving a new vector
+    if (prob > .9) { #every pixel has a .1 probability of changing and thereby giving a new vector
       result[[c]] <- x
-      result[[c]][i] = ifelse(x[i] == 0, 1, 0)
+      result[[c]][i] = ifelse(x[i] == 0, 1, 0) #change a 1 to 0 or 0 to 1 in position i
       c <- c + 1
     }
   }
@@ -148,5 +157,10 @@ CreateSets <- function() {
   return(sets)
 }
 sets <- CreateSets()
-#NeuralNetwork(input[[3, 2]], 'run', FALSE) #run
 result <- NeuralNetwork(sets, 'train', FALSE, TRUE) #train with samples csv
+layout(matrix(c(1,2,3), 1, 3))
+plot(result[['training']], type='l', xlab='Epoch', ylab='Error', bty='l', las=1, col=2, main='Training', cex.lab=1.5, cex.main=2)
+plot(result[['validation']], type='l', xlab='Epoch', ylab='Error', bty='l', las=1, col=3, main='Validation', cex.lab=1.5, cex.main=2)
+plot(result[['test']], type='l', xlab='Epoch', ylab='Accuracy', bty='l', las=1, col=4, main='Test', cex.lab=1.5, cex.main=2)
+
+

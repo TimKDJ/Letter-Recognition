@@ -54,10 +54,15 @@ h5 {
     -webkit-border-radius: 5px;
 }
 
-#output {
+#primeOutput {
     font-family: 'Times New Roman', Georgia, Serif;
     font-weight: bold;
     font-size: 350%;
+}
+
+#alterOutput {
+    font-family: 'Times New Roman', Georgia, Serif;
+    font-weight: bold;
 }
 
 #certainty {
@@ -81,7 +86,7 @@ td.selected {
 }
 
 #continue {
-    margin-top: 50px;
+    margin-top: 20px;
 }
 #reset {
     margin-top: 20px;

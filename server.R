@@ -14,18 +14,24 @@ shinyServer(function(input, output, session) {
   })
   observeEvent(coordinates(), {
     if (!is.null(coordinates())) {
-      input <- ParseJSString(coordinates())
+      #input <- ParseJSString(coordinates())
       #SaveSample(letter(), input)
     }
   })
   output$prediction <- renderUI({ 
     if (!is.null(coordinates())) {
       input <- ParseJSString(coordinates())
+      if (length(input) == 0) {
+        return()
+      }
       nn <- NeuralNetwork(input, 'run', TRUE)
       HTML(paste0(
         '<h5>Prediction:</h5>
-          <span id ="output">', nn[1], '</span><br>
-          <span id="certainty">Certainty: ', nn[2], '%</span>'
+          <span id ="primeOutput">', nn[1], '</span><br>
+          <span id="certainty">Certainty is ', nn[4], '%, alternatives:</span><br>
+          <span id ="alterOutput">', nn[2], '</span><br>
+          <span id ="alterOutput">', nn[3], '</span><br>'
+        
       ))
     }
   })

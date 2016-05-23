@@ -1,23 +1,24 @@
 kPadCols <- 10
 kPadRows <- 10
-kNeuronCount <- c(100, 50, 26)
-kInputCount <- c(0, 100, 50)
+kNeuronCount <- c(100, 63, 26)
+kInputCount <- c(0, 100, 63)
 kLayerType <- c('input', 'hidden', 'output')
 kLayerTotal <- 3
 kBiasBound <- 0.1
 kWeightBound <- 0.01
-kMaxEpochs <- 150
-kLearningRate <- 0.15
+kMaxEpochs <- 120
+kLearningRate <- 0.1
 
 B <- vector('list', kLayerTotal)
 W <- vector('list', kLayerTotal)
+
 
 NeuralNetwork <- function(input, mode, loadWeights = FALSE, saveWeights = FALSE, log = TRUE) {
   InitWeightsBiases(loadWeights)
   
   if (mode == 'run') {
     layers <- ForwardPropogation(input)
-    output <- GetPrediction(layers)
+    output <- GetPrediction(layers, TRUE)
     return(output)
     
   } else if (mode == 'train') {
@@ -94,11 +95,18 @@ BackwardPropogation <- function(target, layers) {
   UpdateWeightsBiases(delta, layers)
 }
 
-GetPrediction <- function(layers) {
+GetPrediction <- function(layers, top3=FALSE) {
   output <- layers[[kLayerTotal, 'output']]
-  prediction <- LETTERS[which.max(output)]
-  certainty <- round(max(output) * 100, 3)
-  return(c(prediction, certainty))
+  certainty <- round(max(output) * 100, 2)
+  if (top3 == FALSE) {
+    letter <- LETTERS[which.max(output)]
+  } else {
+    letter <- LETTERS[match(sort(output, decreasing=TRUE)[1:3], output)]
+    if (certainty == 100) {
+      letter[2:3] <- '-'
+    }
+  }
+  return(c(letter, certainty))
 }
 
 #init weights and biases for hidden layers and the output layer
@@ -109,8 +117,22 @@ InitWeightsBiases <- function(loadOld) {
       W[[i]] <<- matrix(runif(kInputCount[i] * kNeuronCount[i], -kWeightBound, kWeightBound), kInputCount[i], kNeuronCount[i])
     }
   } else {
+    if (!file.exists('weights.RData') || !file.exists('bias.RData')) {
+      stop('Cannot locate weights.RData and bias.RData, place these files in ', getwd())
+    }
     load('weights.RData', .GlobalEnv)
     load('bias.RData', .GlobalEnv)
+    for (i in 2:kLayerTotal) {
+      if (nrow(W[[i]]) != kInputCount[i] || ncol(W[[i]]) != kNeuronCount[i]) {
+        stop('Mismatch in dimensions of weights (', nrow(W[[i]]), 'x', ncol(W[[i]]), ') and neurons/inputs (', kInputCount[i], 'x', kNeuronCount[i], '), loading failed')
+      }
+      if (length(B[[i]]) != kNeuronCount[i]) {
+        stop('Mismatch in amount of biases (', length(B[[i]]), ') and neurons (', kNeuronCount[i], '), loading failed')
+      }
+      if (sum(!is.finite(W[[i]])) != 0 || sum(!is.finite(B[[i]])) != 0) {
+        stop('Weights and biases may only contain numeric values, loading failed')
+      }
+    }
   }
 }
 
