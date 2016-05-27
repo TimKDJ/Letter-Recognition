@@ -1,7 +1,7 @@
 #############################################################################################################################
 # User interface.                                                                                                           #
 # To be used in conjunction with the Shiny R file server.R as well as server_helper_function.R and neural_network_engine.R. #
-# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                                     #                                                                                   #
+# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                                     #                                                                                   
 #############################################################################################################################
 
 
@@ -29,9 +29,8 @@ shinyUI(fixedPage(  # prevent page from collapsing on smaller screens
            uiOutput('pad')  # pad for drawing
     ),
     column(4,
-           # Uncomment the following lines only when samples need to be created, also uncomment lines in server.R
-           #textInput('letter', 'Letter'),  # letter input
-           #verbatimTextOutput('letter'),   # letter display
+           # Uncomment the following line only when samples need to be created, also uncomment lines in server.R
+           #textInput('letter', 'Letter'),  # letter input for sample creating
            actionButton('continue', 'Continue'),  # next button
            br(),
            actionButton('reset', 'Clear'),  # reset button
@@ -39,5 +38,5 @@ shinyUI(fixedPage(  # prevent page from collapsing on smaller screens
     ),
     column(1)
   ),
-  includeScript('www/js/drawingPad.js')  # JavaScript needs to be inline to prevent overwriting of event handlers
+  includeScript('www/js/interface.js')  # JavaScript needs to be inline to prevent overwriting of event handlers
 ))

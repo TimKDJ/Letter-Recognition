@@ -13,8 +13,26 @@ body {
     padding: 0px 0px 50px 0px;
     background-color: #FFFFFF;
 }
+
+.span12, .col-sm-12 {
+    width: 100%;
+}
+
+.span1, .col-sm-1 {
+    width: 8%;
+}
+.span6, .col-sm-6 {
+    width: 50%;
+    margin-left: 0px;
+}
+
+.span4, .col-sm-4 {
+    width: 33%;
+}
+
 img.header {
     width: 33.33%;
+    max-width: 285px;
     float: left;
 }
 

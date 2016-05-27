@@ -1,7 +1,7 @@
 #############################################################################################################################
 # Server that handles user input from the interface.                                                                        #
 # To be used in conjunction with the Shiny R file ui.R as well as server_helper_function.R and neural_network_engine.R.     #
-# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                                     #                                      #
+# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                                     #                                      
 #############################################################################################################################
 
 
@@ -18,12 +18,9 @@ shinyServer(function(input, output, session) {
   output$pad <- renderUI({  # build the drawing pad
     HTML(GenerateTable())
   })
-  # Uncomment the following lines only when samples need to be created, also uncomment lines in ui.R
+  # Uncomment the following lines only when samples need to be created, also uncomment line in ui.R
   #letter <- reactive({  # observe the letter input
   #  input$letter
-  #})
-  #output$letter <- renderText({  # show the current letter
-  #  letter()
   #})
   #observeEvent(coordinates(), {  # observe the js coordinates object
   #  if (!is.null(coordinates())) {

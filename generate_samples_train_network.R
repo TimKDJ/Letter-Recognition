@@ -1,15 +1,15 @@
-#############################################################################################################################
-# Functions that help create multiple noisy samples from the ones drawn on the pad. These can then be used for training.    #                                                         #
-# To be used in conjunction with neural_network_engine.R.                                                                   #
-# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                                     #                                      #
-#############################################################################################################################
+############################################################################################################################################
+# Functions that help create multiple noisy samples from the ones drawn on the pad. These are used for training by the code at the bottom. #                                                       
+# To be used in conjunction with neural_network_engine.R.                                                                                  #
+# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                                                    #                                      
+############################################################################################################################################
 
 
 source('neural_network_engine.R')
 
 
 CreateSets <- function() {
-  #' Build sets of samples for training (70%), validation (20%) and test (10%). Include both original samples and newly generated ones.
+  #' Build sets of samples for training (70%), validation (20%) and testing (10%). Include both original samples and newly generated ones.
   #'
   #' @return A list of sets (training/validation/test) which each contain matrices of letters and samples.
   originalSamples <- ParseCSVSamples()
@@ -81,13 +81,13 @@ ParseCSVSamples <- function() {
 GenerateMultipleSamples <- function(input) {
   #' Take the original samples and generate multiple noisy shifted ones.
   #'
-  #' @param input A vector of length kPadCols * kPadRows.
+  #' @param input A matrix of lists, per row a letter and vector of length kPadCols * kPadRows.
   #' @return A list of letters, each containing the original and newly generated sample vectors.
   samples <- list()
   for (i in 1:nrow(input)) {  # iterate over the samples
     letter <- input[[i, 1]]
     s <- input[[i, 2]]
-    sv <- shiftSampleInSpace(s)  # shift each sample in space
+    sv <- ShiftSampleInSpace(s)  # shift each sample in space
     nsv <- numeric(0)
     for (j in 1:length(sv)) {  # iterate over the new shifted samples
       nsv <- c(nsv, AddNoise(sv[[j]]))  # add noise to each
@@ -110,7 +110,7 @@ AddNoise <- function(x) {
   c <- 2
   for (i in 1:length(x)) {  # loop over every element in the vector
     prob <- runif(1)
-    if (prob > .9) { #each element has a .1 probability of changing and thereby producing a new vector
+    if (prob > .90) { #each element has a .1 probability of changing and thereby producing a new vector
       result[[c]] <- x
       result[[c]][i] = ifelse(x[i] == 0, 1, 0) #change a 1 to 0 or 0 to 1 in position i
       c <- c + 1
@@ -120,7 +120,7 @@ AddNoise <- function(x) {
 }
 
 
-shiftSampleInSpace <- function(x) {
+ShiftSampleInSpace <- function(x) {
   #' Shift the entire sample in different directions to create new samples.
   #'
   #' @param x A vector of length kPadCols * kPadRows.
@@ -195,10 +195,10 @@ GetFreeMovements <- function(x) {
   return(direction)
 }
 
-
+# create sets and train the network.
 sets <- CreateSets()
-result <- TrainNeuralNetwork(sets, FALSE, TRUE) #train with samples csv
+result <- TrainNeuralNetwork(sets, loadWeights = FALSE, saveWeights = TRUE)  # train
 layout(matrix(c(1,2,3), 1, 3))
-plot(result[['training']], type='l', xlab='Epoch', ylab='Error', bty='l', las=1, col=2, main='Training', cex.lab=1.5, cex.main=2)
-plot(result[['validation']], type='l', xlab='Epoch', ylab='Error', bty='l', las=1, col=3, main='Validation', cex.lab=1.5, cex.main=2)
-plot(result[['test']], type='l', xlab='Epoch', ylab='Accuracy', bty='l', las=1, col=4, main='Test', cex.lab=1.5, cex.main=2)
+plot(result[['training']], type='l', xlab='Epoch', ylab='Error', bty='l', las=1, col=2, main='Training', cex.lab=1.5, cex.main=2)  # plot training error
+plot(result[['validation']], type='l', xlab='Epoch', ylab='Error', bty='l', las=1, col=3, main='Validation', cex.lab=1.5, cex.main=2)  # plot validation error
+plot(result[['test']], type='l', xlab='Epoch', ylab='Accuracy', bty='l', las=1, col=4, main='Test', cex.lab=1.5, cex.main=2)  # plot test prediction accuracy

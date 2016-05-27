@@ -1,7 +1,7 @@
 ###############################################################################################################
 # Deep neural network engine for letter recognition.                                                          #
 # To be used in conjunction with the Shiny R files ui.R and server.R as well as server_helper_function.R.     #
-# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                       #                                                                     #
+# Written by Tim de Jong for the course 'Programming: the next step' - date 25-05-2016.                       #                                                                     
 ###############################################################################################################
 
 
@@ -9,19 +9,19 @@
 # These parameters may be adjusted to change the structure of the network.
 # The following guidelines must be followed:
 # kPadCols * kPadRows must equal kNeuronCount[1].
-# kNeuronCount[3] must be 26.
+# kNeuronCount[3] (or the final layer) must be 26.
 # kInputCount must follow from kNeuronCount.
 # The first layer must be input, the final one must be output.
 kPadCols <- 10  # rows of the drawing pad
 kPadRows <- 10  # columns of the drawing pad
-kNeuronCount <- c(100, 63, 26)  # neurons in each layer
-kInputCount <- c(0, 100, 63)  # inputs into each layer
+kNeuronCount <- c(100, 85, 26)  # neurons in each layer
+kInputCount <- c(0, 100, 85)  # inputs into each neuron of each layer
 kLayerType <- c('input', 'hidden', 'output')  # type of each layer
 kLayerTotal <- 3  # total amount of layers
 kBiasBound <- 0.1  # upper and lower bounds from which to randomly sample bias values
 kWeightBound <- 0.01  # upper and lower bounds from which to randomly sample weight values
-kMaxEpochs <- 100  # maximal number of epochs to train the network for
-kLearningRate <- 0.1  # learning modifier that adjusts the gradient descent
+kMaxEpochs <- 250  # maximum amount of iterations through the training dataset
+kLearningRate <- 0.05  # learning modifier that adjusts the gradient descent
 
 
 # Global variables used internally.
